@@ -2,12 +2,16 @@
 
 Prep League task `w02-tue-ai-1`: the bigram character model from Zero to Hero lecture 2, built two ways on `names.txt` (32,033 names, 228,146 bigrams), with all code typed by hand.
 
-- **Code:** `main.py` (the card suggests `ai/w02-makemore/bigram.py`; same content, different path)
-- **Count model NLL:** 2.4544
-- **Neural model NLL:** 2.4750 (0.021 from the count model, inside the 0.05 target)
+| Model | Average training NLL |
+|---|---|
+| Count, +1 smoothing | **2.4544** |
+| Neural, one 27x27 layer | **2.4750** |
+
+The two are 0.021 apart, inside the 0.05 target.
 
 ```bash
-python main.py   # run from this folder; needs torch and matplotlib
+pip install torch matplotlib
+python bigram.py   # run from this folder; prints the count NLL and 10 samples from each model
 ```
 
 ## Count model
@@ -43,12 +47,8 @@ Both samplers use `torch.Generator().manual_seed(2147483647)`, reseeded before e
 | ke. | ke. |
 | teda. | teda. |
 
-9 of 10 names are identical, which shows both models learned the same bigram table. The one difference comes from the neural model being slightly off the count table (100 training steps plus regularisation), so one random draw late in name 2 landed on a different character.
+9 of 10 names are identical, which shows both models learned the same bigram table. The neural model sits slightly off the count table (100 training steps plus regularisation), so one random draw late in name 2 landed on a different character.
 
-## Bug found during review
-- **Neural sampling read the wrong row.** The first version sampled from `probs[indx]`, but `probs` has one row per training example (228,146 x 27), not one per character. Row 0 happened to be correct (the first bigram starts with `.`), and every later step used an unrelated example, producing names like `kd.` and `nmr.`.
-- **Fix:** run the model on the current character, `onehot(indx) @ W` then softmax, which is the same as `softmax(W[indx])`.
-
-## What I'd note in an interview
+## Takeaways
 - Bigram NLL of about 2.45 is the baseline every later makemore model must beat.
 - Counting and gradient descent reach the same answer here because a one-hot linear layer is just a lookup table. The neural approach is the one that scales once the context is longer than one character.
